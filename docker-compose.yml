@@ -1,0 +1,50 @@
+
+
+
+version: '3'
+
+services:
+  db:
+    image: postgres:11-alpine
+    restart: always
+    volumes:
+    - ./volumes/contacts_db:/contacts_db
+    environment:
+      POSTGRES_USER: contacts_db
+      POSTGRES_PASSWORD: contacts_db_pass
+      POSTGRES_DB: contacts_db
+      PGDATA: /contacts_db
+
+  redis:
+    image: redis:5-alpine
+    volumes:
+      - ./volumes/redis:/data
+
+
+  api:
+    image: avatsaev/angular-contacts-api:dev
+    restart: always
+    ports:
+    - 3000:3000
+    depends_on:
+    - db
+    - redis
+    environment:
+      SERVER_PORT: 3000
+      POSTGRES_HOST: db
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: contacts_db
+      POSTGRES_PASSWORD: contacts_db_pass
+      POSTGRES_DB: contacts_db
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+
+  client:
+    build:
+      context: .
+      args:
+        NG_ENV: local
+    restart: always
+    ports:
+      - 4000:80
+
